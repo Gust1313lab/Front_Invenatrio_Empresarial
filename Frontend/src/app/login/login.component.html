@@ -1,0 +1,111 @@
+<main class="relative min-h-screen overflow-hidden px-4 py-10 sm:px-6 lg:px-8">
+  <div class="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.15),transparent_35%),radial-gradient(circle_at_bottom_right,rgba(15,23,42,0.88),transparent_42%)]"></div>
+  <div class="absolute left-[-8rem] top-[-8rem] h-72 w-72 rounded-full bg-cyan-400/10 blur-3xl"></div>
+  <div class="absolute bottom-[-6rem] right-[-5rem] h-72 w-72 rounded-full bg-slate-500/10 blur-3xl"></div>
+
+  <section class="relative mx-auto flex min-h-[calc(100vh-5rem)] w-full max-w-6xl items-center justify-center">
+    <div class="grid w-full overflow-hidden rounded-[2rem] border border-white/10 bg-white/[0.05] shadow-[0_30px_120px_rgba(2,6,23,0.55)] backdrop-blur-2xl lg:grid-cols-[1.05fr_0.95fr]">
+      <div class="hidden border-r border-white/10 p-10 lg:flex lg:flex-col lg:justify-between">
+        <div>
+          <span class="inline-flex items-center rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.2em] text-cyan-200">Secure workspace</span>
+          <h1 class="mt-6 max-w-xl text-4xl font-semibold tracking-tight text-white sm:text-5xl">A refined entry point for operational teams.</h1>
+          <p class="mt-5 max-w-lg text-sm leading-7 text-slate-300">A premium login experience with guarded routing, resilient API integration and a dashboard shell designed for fast-moving product teams.</p>
+        </div>
+
+        <div class="grid grid-cols-3 gap-4">
+          <div class="glass-panel rounded-2xl p-4">
+            <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Latency</p>
+            <p class="mt-3 text-2xl font-semibold text-white">128ms</p>
+          </div>
+          <div class="glass-panel rounded-2xl p-4">
+            <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Auth</p>
+            <p class="mt-3 text-2xl font-semibold text-white">JWT</p>
+          </div>
+          <div class="glass-panel rounded-2xl p-4">
+            <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Security</p>
+            <p class="mt-3 text-2xl font-semibold text-white">Guarded</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="p-6 sm:p-10">
+        <div class="mx-auto max-w-md">
+          <div class="mb-8 flex items-center gap-3 text-sm text-slate-300">
+            <div class="flex h-11 w-11 items-center justify-center rounded-2xl border border-white/10 bg-white/8 text-cyan-300 shadow-lg shadow-cyan-950/20">
+              <span class="text-lg font-semibold">N</span>
+            </div>
+            <div>
+              <p class="font-semibold text-white">NovaFlow</p>
+              <p class="text-xs uppercase tracking-[0.2em] text-slate-400">Enterprise access</p>
+            </div>
+          </div>
+
+          <div class="glass-panel rounded-[1.75rem] p-6 sm:p-8">
+            <div class="mb-8">
+              <h2 class="text-2xl font-semibold text-white">Sign in to your dashboard</h2>
+              <p class="mt-2 text-sm leading-6 text-slate-300">Use your username or email and a secure password to continue.</p>
+            </div>
+
+            <form class="space-y-5" [formGroup]="loginForm" (ngSubmit)="submit()" novalidate>
+              <label class="group relative block">
+                <span class="absolute left-4 top-3 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-slate-400 transition-all duration-200 group-focus-within:text-cyan-300">Username or email</span>
+                <input
+                  type="text"
+                  formControlName="identifier"
+                  autocomplete="username"
+                  class="peer mt-6 w-full rounded-2xl border border-white/10 bg-slate-950/55 px-4 pb-4 pt-7 text-sm text-white outline-none transition duration-200 placeholder:text-transparent focus:border-cyan-300/50 focus:ring-4 focus:ring-cyan-400/10"
+                  placeholder="name@company.com"
+                />
+                <span class="pointer-events-none absolute left-4 top-[3.35rem] text-sm text-slate-400 transition-all duration-200 peer-placeholder-shown:top-[3.05rem] peer-placeholder-shown:text-base peer-placeholder-shown:text-slate-500 peer-focus:top-[3.35rem] peer-focus:text-sm peer-focus:text-cyan-200">name&#64;company.com</span>
+              </label>
+              @if (identifierError()) {
+                <p class="-mt-3 text-sm text-rose-300">{{ identifierError() }}</p>
+              }
+
+              <label class="group relative block">
+                <span class="absolute left-4 top-3 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-slate-400 transition-all duration-200 group-focus-within:text-cyan-300">Password</span>
+                <input
+                  type="password"
+                  formControlName="password"
+                  autocomplete="current-password"
+                  class="peer mt-6 w-full rounded-2xl border border-white/10 bg-slate-950/55 px-4 pb-4 pt-7 text-sm text-white outline-none transition duration-200 placeholder:text-transparent focus:border-cyan-300/50 focus:ring-4 focus:ring-cyan-400/10"
+                  placeholder="Your secure password"
+                />
+                <span class="pointer-events-none absolute left-4 top-[3.35rem] text-sm text-slate-400 transition-all duration-200 peer-placeholder-shown:top-[3.05rem] peer-placeholder-shown:text-base peer-placeholder-shown:text-slate-500 peer-focus:top-[3.35rem] peer-focus:text-sm peer-focus:text-cyan-200">Your secure password</span>
+              </label>
+              @if (passwordError()) {
+                <p class="-mt-3 text-sm text-rose-300">{{ passwordError() }}</p>
+              }
+
+              <div class="flex items-center justify-between gap-4 text-sm text-slate-300">
+                <label class="inline-flex items-center gap-3">
+                  <input type="checkbox" formControlName="rememberMe" class="h-4 w-4 rounded border-white/20 bg-slate-900 text-cyan-400 focus:ring-cyan-400/20" />
+                  <span>Remember me</span>
+                </label>
+                <span class="text-slate-400">Need access? Contact admin</span>
+              </div>
+
+              @if (submitError()) {
+                <div class="rounded-2xl border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{{ submitError() }}</div>
+              }
+
+              <button
+                type="submit"
+                [disabled]="isSubmitting()"
+                class="inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-cyan-400 px-4 py-4 text-sm font-semibold text-slate-950 shadow-lg shadow-cyan-950/30 transition duration-200 hover:translate-y-[-1px] hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-70"
+              >
+                @if (isSubmitting()) {
+                  <span class="h-4 w-4 animate-spin rounded-full border-2 border-slate-950/20 border-t-slate-950"></span>
+                  <span>Signing in...</span>
+                } @else {
+                  <span>Enter dashboard</span>
+                  <span aria-hidden="true">→</span>
+                }
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+</main>
