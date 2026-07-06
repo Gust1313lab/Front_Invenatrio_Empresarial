@@ -40,38 +40,36 @@
             </div>
           </div>
 
-          <div class="glass-panel rounded-[1.75rem] p-6 sm:p-8">
+          <div class="glass-panel rounded-[1.75rem] p-5 sm:p-8">
             <div class="mb-8">
               <h2 class="text-2xl font-semibold text-white">Sign in to your dashboard</h2>
               <p class="mt-2 text-sm leading-6 text-slate-300">Use your username or email and a secure password to continue.</p>
             </div>
 
             <form class="space-y-5" [formGroup]="loginForm" (ngSubmit)="submit()" novalidate>
-              <label class="group relative block">
-                <span class="absolute left-4 top-3 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-slate-400 transition-all duration-200 group-focus-within:text-cyan-300">Username or email</span>
+              <label class="group block space-y-2">
+                <span class="block text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 transition-colors duration-200 group-focus-within:text-cyan-300">Correo electrónico o usuario</span>
                 <input
                   type="text"
                   formControlName="identifier"
                   autocomplete="username"
-                  class="peer mt-6 w-full rounded-2xl border border-white/10 bg-slate-950/55 px-4 pb-4 pt-7 text-sm text-white outline-none transition duration-200 placeholder:text-transparent focus:border-cyan-300/50 focus:ring-4 focus:ring-cyan-400/10"
-                  placeholder="name@company.com"
+                  class="w-full rounded-2xl border border-white/10 bg-slate-950/55 px-4 py-4 text-base text-white outline-none transition duration-200 placeholder:text-slate-500 focus:border-cyan-300/50 focus:ring-4 focus:ring-cyan-400/10"
+                  placeholder="correo@empresa.com"
                 />
-                <span class="pointer-events-none absolute left-4 top-[3.35rem] text-sm text-slate-400 transition-all duration-200 peer-placeholder-shown:top-[3.05rem] peer-placeholder-shown:text-base peer-placeholder-shown:text-slate-500 peer-focus:top-[3.35rem] peer-focus:text-sm peer-focus:text-cyan-200">name&#64;company.com</span>
               </label>
               @if (identifierError()) {
                 <p class="-mt-3 text-sm text-rose-300">{{ identifierError() }}</p>
               }
 
-              <label class="group relative block">
-                <span class="absolute left-4 top-3 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-slate-400 transition-all duration-200 group-focus-within:text-cyan-300">Password</span>
+              <label class="group block space-y-2">
+                <span class="block text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 transition-colors duration-200 group-focus-within:text-cyan-300">Contraseña</span>
                 <input
                   type="password"
                   formControlName="password"
                   autocomplete="current-password"
-                  class="peer mt-6 w-full rounded-2xl border border-white/10 bg-slate-950/55 px-4 pb-4 pt-7 text-sm text-white outline-none transition duration-200 placeholder:text-transparent focus:border-cyan-300/50 focus:ring-4 focus:ring-cyan-400/10"
-                  placeholder="Your secure password"
+                  class="w-full rounded-2xl border border-white/10 bg-slate-950/55 px-4 py-4 text-base text-white outline-none transition duration-200 placeholder:text-slate-500 focus:border-cyan-300/50 focus:ring-4 focus:ring-cyan-400/10"
+                  placeholder="Tu contraseña segura"
                 />
-                <span class="pointer-events-none absolute left-4 top-[3.35rem] text-sm text-slate-400 transition-all duration-200 peer-placeholder-shown:top-[3.05rem] peer-placeholder-shown:text-base peer-placeholder-shown:text-slate-500 peer-focus:top-[3.35rem] peer-focus:text-sm peer-focus:text-cyan-200">Your secure password</span>
               </label>
               @if (passwordError()) {
                 <p class="-mt-3 text-sm text-rose-300">{{ passwordError() }}</p>
@@ -92,7 +90,7 @@
               <button
                 type="submit"
                 [disabled]="isSubmitting()"
-                class="inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-cyan-400 px-4 py-4 text-sm font-semibold text-slate-950 shadow-lg shadow-cyan-950/30 transition duration-200 hover:translate-y-[-1px] hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-70"
+                class="inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-cyan-400 px-4 py-4 text-base font-semibold text-slate-950 shadow-lg shadow-cyan-950/30 transition duration-200 hover:translate-y-[-1px] hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-70"
               >
                 @if (isSubmitting()) {
                   <span class="h-4 w-4 animate-spin rounded-full border-2 border-slate-950/20 border-t-slate-950"></span>
