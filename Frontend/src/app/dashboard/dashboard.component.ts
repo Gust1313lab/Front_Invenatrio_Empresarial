@@ -1,7 +1,21 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostListener, signal } from '@angular/core';
+import { Component, HostListener, OnInit, signal, inject } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { finalize } from 'rxjs';
 import { RouterLink } from '@angular/router';
 import { AuthService } from '../core/auth.service';
+import {
+  CreateInventoryPayload,
+  InventoryItem,
+  InventoryService,
+  UpdateInventoryPayload,
+} from '../core/inventory.service';
+import {
+  CreateProductPayload,
+  Product,
+  ProductService,
+  UpdateProductPayload,
+} from '../core/product.service';
 
 interface MetricCard {
   label: string;
@@ -19,14 +33,49 @@ interface ActivityItem {
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './dashboard.component.html',
   styleUrl: './dashboard.component.css',
 })
-export class DashboardComponent {
+export class DashboardComponent implements OnInit {
+  private readonly fb = inject(FormBuilder);
+  private readonly productService = inject(ProductService);
+  private readonly inventoryService = inject(InventoryService);
+
   readonly sidebarCollapsed = signal(false);
   readonly profileMenuOpen = signal(false);
   readonly searchTerm = signal('');
+  readonly loadingProducts = signal(false);
+  readonly loadingInventory = signal(false);
+  readonly actionMessage = signal<string | null>(null);
+  readonly actionError = signal<string | null>(null);
+  readonly selectedProductId = signal<string | number | null>(null);
+  readonly selectedInventoryId = signal<string | number | null>(null);
+  readonly products = signal<Product[]>([]);
+  readonly inventory = signal<InventoryItem[]>([]);
+  readonly activePanel = signal<'products' | 'inventory' | 'users'>('products');
+
+  readonly productForm = this.fb.nonNullable.group({
+    name: ['', [Validators.required, Validators.minLength(2)]],
+    sku: ['', [Validators.required, Validators.minLength(2)]],
+    price: [0, [Validators.required, Validators.min(0)]],
+    category: ['', [Validators.required, Validators.minLength(2)]],
+    description: [''],
+  });
+
+  readonly inventoryForm = this.fb.nonNullable.group({
+    product_id: ['', [Validators.required]],
+    quantity: [0, [Validators.required, Validators.min(0)]],
+    warehouse_location: ['', [Validators.required, Validators.minLength(2)]],
+    min_stock: [0, [Validators.min(0)]],
+  });
+
+  readonly registerUserForm = this.fb.nonNullable.group({
+    username: ['', [Validators.required, Validators.minLength(3)]],
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', [Validators.required, Validators.minLength(6)]],
+    role: ['employee', [Validators.required]],
+  });
 
   readonly metrics: MetricCard[] = [
     { label: 'Revenue', value: '$124.8k', change: '+12.6%', tone: 'from-cyan-400/20 to-sky-400/10' },
@@ -60,6 +109,238 @@ export class DashboardComponent {
   readonly chartBars = [42, 68, 54, 82, 76, 90, 64, 96, 58, 74, 88, 70];
 
   constructor(private readonly authService: AuthService) {}
+
+  ngOnInit(): void {
+    this.loadProducts();
+    this.loadInventory();
+  }
+
+  get displayName(): string {
+    return this.authService.getRole() ? 'Usuario autenticado' : 'Invitado';
+  }
+
+  get displayEmail(): string {
+    return this.authService.getRole() ? 'Acceso por JWT' : 'Dashboard público';
+  }
+
+  get displayRole(): string {
+    const role = this.authService.getRole();
+
+    if (!role) {
+      return 'guest';
+    }
+
+    return role;
+  }
+
+  get permissionsLabel(): string {
+    if (this.authService.canManageUsers()) {
+      return 'Admin: usuarios, productos e inventario';
+    }
+
+    if (this.authService.canManageProducts()) {
+      return 'Empleado: productos e inventario';
+    }
+
+    return 'Sin sesión: acceso solo lectura';
+  }
+
+  canManageUsers(): boolean {
+    return this.authService.canManageUsers();
+  }
+
+  canManageProducts(): boolean {
+    return this.authService.canManageProducts();
+  }
+
+  canManageInventory(): boolean {
+    return this.authService.canManageInventory();
+  }
+
+  canEditProducts(): boolean {
+    return this.authService.canEditProducts();
+  }
+
+  canEditInventory(): boolean {
+    return this.authService.canEditInventory();
+  }
+
+  canDeleteProducts(): boolean {
+    return this.authService.canDeleteProducts();
+  }
+
+  selectPanel(panel: 'products' | 'inventory' | 'users'): void {
+    this.activePanel.set(panel);
+  }
+
+  loadProducts(): void {
+    this.loadingProducts.set(true);
+
+    this.productService
+      .getProducts()
+      .pipe(finalize(() => this.loadingProducts.set(false)))
+      .subscribe({
+        next: (items) => this.products.set(items ?? []),
+        error: () => this.actionError.set('No se pudieron cargar los productos.'),
+      });
+  }
+
+  loadInventory(): void {
+    this.loadingInventory.set(true);
+
+    this.inventoryService
+      .getInventory()
+      .pipe(finalize(() => this.loadingInventory.set(false)))
+      .subscribe({
+        next: (items) => this.inventory.set(items ?? []),
+        error: () => this.actionError.set('No se pudo cargar el inventario.'),
+      });
+  }
+
+  startEditProduct(product: Product): void {
+    this.selectedProductId.set(product.id);
+    this.productForm.patchValue({
+      name: product.name,
+      sku: product.sku,
+      price: product.price,
+      category: product.category,
+      description: (product.description as string | undefined) ?? '',
+    });
+    this.selectPanel('products');
+  }
+
+  startEditInventory(item: InventoryItem): void {
+    this.selectedInventoryId.set(item.id);
+    this.inventoryForm.patchValue({
+      product_id: String(item.product_id),
+      quantity: item.quantity,
+      warehouse_location: item.warehouse_location,
+      min_stock: item.min_stock ?? 0,
+    });
+    this.selectPanel('inventory');
+  }
+
+  submitProduct(): void {
+    if (!this.canManageProducts()) {
+      return;
+    }
+
+    if (this.productForm.invalid) {
+      this.productForm.markAllAsTouched();
+      return;
+    }
+
+    const payload = this.productForm.getRawValue() as CreateProductPayload;
+    const selectedProductId = this.selectedProductId();
+    if (selectedProductId && !this.canEditProducts()) {
+      return;
+    }
+    const request = selectedProductId
+      ? this.productService.updateProduct(selectedProductId, payload as UpdateProductPayload)
+      : this.productService.createProduct(payload);
+
+    this.actionError.set(null);
+    this.actionMessage.set(null);
+
+    request.subscribe({
+      next: () => {
+        this.actionMessage.set(selectedProductId ? 'Producto actualizado.' : 'Producto creado.');
+        this.productForm.reset({ name: '', sku: '', price: 0, category: '', description: '' });
+        this.selectedProductId.set(null);
+        this.loadProducts();
+      },
+      error: () => this.actionError.set('No se pudo guardar el producto.'),
+    });
+  }
+
+  submitInventory(): void {
+    if (!this.canManageInventory()) {
+      return;
+    }
+
+    if (this.inventoryForm.invalid) {
+      this.inventoryForm.markAllAsTouched();
+      return;
+    }
+
+    const rawValue = this.inventoryForm.getRawValue();
+    const payload: CreateInventoryPayload = {
+      product_id: rawValue.product_id,
+      quantity: rawValue.quantity,
+      warehouse_location: rawValue.warehouse_location,
+      min_stock: rawValue.min_stock ?? undefined,
+    };
+    const selectedInventoryId = this.selectedInventoryId();
+    if (selectedInventoryId && !this.canEditInventory()) {
+      return;
+    }
+    const request = selectedInventoryId
+      ? this.inventoryService.updateInventory(selectedInventoryId, {
+          quantity: payload.quantity,
+          warehouse_location: payload.warehouse_location,
+          min_stock: payload.min_stock,
+        })
+      : this.inventoryService.createInventory(payload);
+
+    this.actionError.set(null);
+    this.actionMessage.set(null);
+
+    request.subscribe({
+      next: () => {
+        this.actionMessage.set(selectedInventoryId ? 'Inventario actualizado.' : 'Inventario creado.');
+        this.inventoryForm.reset({ product_id: '', quantity: 0, warehouse_location: '', min_stock: 0 });
+        this.selectedInventoryId.set(null);
+        this.loadInventory();
+      },
+      error: () => this.actionError.set('No se pudo guardar el inventario.'),
+    });
+  }
+
+  submitRegisterUser(): void {
+    if (!this.canManageUsers()) {
+      return;
+    }
+
+    if (this.registerUserForm.invalid) {
+      this.registerUserForm.markAllAsTouched();
+      return;
+    }
+
+    this.actionError.set(null);
+    this.actionMessage.set(null);
+
+    this.authService.register(this.registerUserForm.getRawValue()).subscribe({
+      next: () => {
+        this.actionMessage.set('Usuario registrado.');
+        this.registerUserForm.reset({ username: '', email: '', password: '', role: 'employee' });
+      },
+      error: () => this.actionError.set('No se pudo registrar el usuario.'),
+    });
+  }
+
+  deleteProduct(product: Product): void {
+    if (!this.canDeleteProducts()) {
+      return;
+    }
+
+    this.productService.deleteProduct(product.id).subscribe({
+      next: () => {
+        this.actionMessage.set('Producto desactivado.');
+        this.loadProducts();
+      },
+      error: () => this.actionError.set('No se pudo desactivar el producto.'),
+    });
+  }
+
+  clearProductForm(): void {
+    this.selectedProductId.set(null);
+    this.productForm.reset({ name: '', sku: '', price: 0, category: '', description: '' });
+  }
+
+  clearInventoryForm(): void {
+    this.selectedInventoryId.set(null);
+    this.inventoryForm.reset({ product_id: '', quantity: 0, warehouse_location: '', min_stock: 0 });
+  }
 
   toggleSidebar(): void {
     this.sidebarCollapsed.update((value) => !value);

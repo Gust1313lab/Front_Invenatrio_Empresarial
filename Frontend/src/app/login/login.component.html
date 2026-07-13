@@ -42,65 +42,152 @@
 
           <div class="glass-panel rounded-[1.75rem] p-5 sm:p-8">
             <div class="mb-8">
-              <h2 class="text-2xl font-semibold text-white">Sign in to your dashboard</h2>
-              <p class="mt-2 text-sm leading-6 text-slate-300">Use your username or email and a secure password to continue.</p>
+              @if (isRegisterMode()) {
+                <h2 class="text-2xl font-semibold text-white">Request access</h2>
+                <p class="mt-2 text-sm leading-6 text-slate-300">Tu solicitud se crea con rol de empleado. El admin queda fuera de este flujo.</p>
+              } @else {
+                <h2 class="text-2xl font-semibold text-white">Sign in to your dashboard</h2>
+                <p class="mt-2 text-sm leading-6 text-slate-300">Use your username or email and a secure password to continue.</p>
+              }
             </div>
 
-            <form class="space-y-5" [formGroup]="loginForm" (ngSubmit)="submit()" novalidate>
-              <label class="group block space-y-2">
-                <span class="block text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 transition-colors duration-200 group-focus-within:text-cyan-300">Correo electrónico o usuario</span>
-                <input
-                  type="text"
-                  formControlName="identifier"
-                  autocomplete="username"
-                  class="w-full rounded-2xl border border-white/10 bg-slate-950/55 px-4 py-4 text-base text-white outline-none transition duration-200 placeholder:text-slate-500 focus:border-cyan-300/50 focus:ring-4 focus:ring-cyan-400/10"
-                  placeholder="correo@empresa.com"
-                />
-              </label>
-              @if (identifierError()) {
-                <p class="-mt-3 text-sm text-rose-300">{{ identifierError() }}</p>
-              }
-
-              <label class="group block space-y-2">
-                <span class="block text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 transition-colors duration-200 group-focus-within:text-cyan-300">Contraseña</span>
-                <input
-                  type="password"
-                  formControlName="password"
-                  autocomplete="current-password"
-                  class="w-full rounded-2xl border border-white/10 bg-slate-950/55 px-4 py-4 text-base text-white outline-none transition duration-200 placeholder:text-slate-500 focus:border-cyan-300/50 focus:ring-4 focus:ring-cyan-400/10"
-                  placeholder="Tu contraseña segura"
-                />
-              </label>
-              @if (passwordError()) {
-                <p class="-mt-3 text-sm text-rose-300">{{ passwordError() }}</p>
-              }
-
-              <div class="flex items-center justify-between gap-4 text-sm text-slate-300">
-                <label class="inline-flex items-center gap-3">
-                  <input type="checkbox" formControlName="rememberMe" class="h-4 w-4 rounded border-white/20 bg-slate-900 text-cyan-400 focus:ring-cyan-400/20" />
-                  <span>Remember me</span>
+            @if (!isRegisterMode()) {
+              <form class="space-y-5" [formGroup]="loginForm" (ngSubmit)="submit()" novalidate>
+                <label class="group block space-y-2">
+                  <span class="block text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 transition-colors duration-200 group-focus-within:text-cyan-300">Correo electrónico o usuario</span>
+                  <input
+                    type="text"
+                    formControlName="identifier"
+                    autocomplete="username"
+                    class="w-full rounded-2xl border border-white/10 bg-slate-950/55 px-4 py-4 text-base text-white outline-none transition duration-200 placeholder:text-slate-500 focus:border-cyan-300/50 focus:ring-4 focus:ring-cyan-400/10"
+                    placeholder="correo@empresa.com"
+                  />
                 </label>
-                <span class="text-slate-400">Need access? Contact admin</span>
-              </div>
-
-              @if (submitError()) {
-                <div class="rounded-2xl border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{{ submitError() }}</div>
-              }
-
-              <button
-                type="submit"
-                [disabled]="isSubmitting()"
-                class="inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-cyan-400 px-4 py-4 text-base font-semibold text-slate-950 shadow-lg shadow-cyan-950/30 transition duration-200 hover:translate-y-[-1px] hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-70"
-              >
-                @if (isSubmitting()) {
-                  <span class="h-4 w-4 animate-spin rounded-full border-2 border-slate-950/20 border-t-slate-950"></span>
-                  <span>Signing in...</span>
-                } @else {
-                  <span>Enter dashboard</span>
-                  <span aria-hidden="true">→</span>
+                @if (identifierError()) {
+                  <p class="-mt-3 text-sm text-rose-300">{{ identifierError() }}</p>
                 }
-              </button>
-            </form>
+
+                <label class="group block space-y-2">
+                  <span class="block text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 transition-colors duration-200 group-focus-within:text-cyan-300">Contraseña</span>
+                  <input
+                    type="password"
+                    formControlName="password"
+                    autocomplete="current-password"
+                    class="w-full rounded-2xl border border-white/10 bg-slate-950/55 px-4 py-4 text-base text-white outline-none transition duration-200 placeholder:text-slate-500 focus:border-cyan-300/50 focus:ring-4 focus:ring-cyan-400/10"
+                    placeholder="Tu contraseña segura"
+                  />
+                </label>
+                @if (passwordError()) {
+                  <p class="-mt-3 text-sm text-rose-300">{{ passwordError() }}</p>
+                }
+
+                <div class="flex items-center justify-between gap-4 text-sm text-slate-300">
+                  <label class="inline-flex items-center gap-3">
+                    <input type="checkbox" formControlName="rememberMe" class="h-4 w-4 rounded border-white/20 bg-slate-900 text-cyan-400 focus:ring-cyan-400/20" />
+                    <span>Remember me</span>
+                  </label>
+                  <button type="button" class="text-slate-400 transition hover:text-cyan-300" (click)="toggleRegisterMode()">Request role</button>
+                </div>
+
+                @if (submitError()) {
+                  <div class="rounded-2xl border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{{ submitError() }}</div>
+                }
+
+                @if (submitMessage()) {
+                  <div class="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">{{ submitMessage() }}</div>
+                }
+
+                <button
+                  type="submit"
+                  [disabled]="isSubmitting()"
+                  class="inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-cyan-400 px-4 py-4 text-base font-semibold text-slate-950 shadow-lg shadow-cyan-950/30 transition duration-200 hover:translate-y-[-1px] hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  @if (isSubmitting()) {
+                    <span class="h-4 w-4 animate-spin rounded-full border-2 border-slate-950/20 border-t-slate-950"></span>
+                    <span>Signing in...</span>
+                  } @else {
+                    <span>Enter dashboard</span>
+                    <span aria-hidden="true">→</span>
+                  }
+                </button>
+              </form>
+            } @else {
+              <form class="space-y-5" [formGroup]="registerForm" (ngSubmit)="submit()" novalidate>
+                <label class="group block space-y-2">
+                  <span class="block text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 transition-colors duration-200 group-focus-within:text-cyan-300">Usuario</span>
+                  <input
+                    type="text"
+                    formControlName="username"
+                    autocomplete="username"
+                    class="w-full rounded-2xl border border-white/10 bg-slate-950/55 px-4 py-4 text-base text-white outline-none transition duration-200 placeholder:text-slate-500 focus:border-cyan-300/50 focus:ring-4 focus:ring-cyan-400/10"
+                    placeholder="juan.perez"
+                  />
+                </label>
+                @if (registerUsernameError()) {
+                  <p class="-mt-3 text-sm text-rose-300">{{ registerUsernameError() }}</p>
+                }
+
+                <label class="group block space-y-2">
+                  <span class="block text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 transition-colors duration-200 group-focus-within:text-cyan-300">Correo electrónico</span>
+                  <input
+                    type="email"
+                    formControlName="email"
+                    autocomplete="email"
+                    class="w-full rounded-2xl border border-white/10 bg-slate-950/55 px-4 py-4 text-base text-white outline-none transition duration-200 placeholder:text-slate-500 focus:border-cyan-300/50 focus:ring-4 focus:ring-cyan-400/10"
+                    placeholder="correo@empresa.com"
+                  />
+                </label>
+                @if (registerEmailError()) {
+                  <p class="-mt-3 text-sm text-rose-300">{{ registerEmailError() }}</p>
+                }
+
+                <label class="group block space-y-2">
+                  <span class="block text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 transition-colors duration-200 group-focus-within:text-cyan-300">Contraseña</span>
+                  <input
+                    type="password"
+                    formControlName="password"
+                    autocomplete="new-password"
+                    class="w-full rounded-2xl border border-white/10 bg-slate-950/55 px-4 py-4 text-base text-white outline-none transition duration-200 placeholder:text-slate-500 focus:border-cyan-300/50 focus:ring-4 focus:ring-cyan-400/10"
+                    placeholder="Crea una contraseña segura"
+                  />
+                </label>
+                @if (registerPasswordError()) {
+                  <p class="-mt-3 text-sm text-rose-300">{{ registerPasswordError() }}</p>
+                }
+
+                <label class="group block space-y-2">
+                  <span class="block text-xs font-semibold uppercase tracking-[0.2em] text-slate-400 transition-colors duration-200 group-focus-within:text-cyan-300">Rol solicitado</span>
+                  <div class="rounded-2xl border border-white/10 bg-slate-950/55 px-4 py-4 text-base text-slate-300">Empleado</div>
+                </label>
+
+                @if (submitError()) {
+                  <div class="rounded-2xl border border-rose-400/20 bg-rose-500/10 px-4 py-3 text-sm text-rose-200">{{ submitError() }}</div>
+                }
+
+                @if (submitMessage()) {
+                  <div class="rounded-2xl border border-emerald-400/20 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-200">{{ submitMessage() }}</div>
+                }
+
+                <div class="flex items-center justify-between gap-4 text-sm text-slate-300">
+                  <span class="text-slate-400">Ya tienes cuenta?</span>
+                  <button type="button" class="text-slate-400 transition hover:text-cyan-300" (click)="toggleRegisterMode()">Volver al login</button>
+                </div>
+
+                <button
+                  type="submit"
+                  [disabled]="isSubmitting()"
+                  class="inline-flex w-full items-center justify-center gap-3 rounded-2xl bg-cyan-400 px-4 py-4 text-base font-semibold text-slate-950 shadow-lg shadow-cyan-950/30 transition duration-200 hover:translate-y-[-1px] hover:bg-cyan-300 disabled:cursor-not-allowed disabled:opacity-70"
+                >
+                  @if (isSubmitting()) {
+                    <span class="h-4 w-4 animate-spin rounded-full border-2 border-slate-950/20 border-t-slate-950"></span>
+                    <span>Sending request...</span>
+                  } @else {
+                    <span>Request employee role</span>
+                    <span aria-hidden="true">→</span>
+                  }
+                </button>
+              </form>
+            }
           </div>
         </div>
       </div>

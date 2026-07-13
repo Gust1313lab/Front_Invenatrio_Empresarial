@@ -1,12 +1,29 @@
 import { Injectable, PLATFORM_ID, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { isPlatformBrowser } from '@angular/common';
 import { Observable, map, tap } from 'rxjs';
+
+export type UserRole = 'admin' | 'employee' | string;
 
 export interface LoginCredentials {
   identifier: string;
   password: string;
   rememberMe: boolean;
+}
+
+export interface RegisterCredentials {
+  username: string;
+  email: string;
+  password: string;
+  role: UserRole;
+}
+
+export interface RegisterResponse {
+  id?: string;
+  username?: string;
+  email?: string;
+  role?: UserRole;
+  raw: unknown;
 }
 
 export interface AuthSession {
@@ -25,7 +42,7 @@ export interface AuthSession {
 export class AuthService {
   private readonly http = inject(HttpClient);
   private readonly platformId = inject(PLATFORM_ID);
-  private readonly apiUrl = 'https://202302713.aplicacionesweb2026.com/api/auth/login';
+  private readonly apiBaseUrl = 'https://202302713.aplicacionesweb2026.com/api';
   private readonly storageKey = 'nova_flow_auth_token';
   private readonly roleStorageKey = 'nova_flow_auth_role';
 
@@ -36,9 +53,15 @@ export class AuthService {
       password: credentials.password,
     };
 
-    return this.http.post<unknown>(this.apiUrl, payload).pipe(
+    return this.http.post<unknown>(`${this.apiBaseUrl}/auth/login`, payload).pipe(
       map((response) => this.normalizeSession(response)),
       tap((session) => this.storeSession(session, credentials.rememberMe))
+    );
+  }
+
+  register(credentials: RegisterCredentials): Observable<RegisterResponse> {
+    return this.http.post<unknown>(`${this.apiBaseUrl}/auth/register`, credentials).pipe(
+      map((response) => this.normalizeRegisterResponse(response))
     );
   }
 
@@ -71,6 +94,52 @@ export class AuthService {
     }
 
     return localStorage.getItem(this.roleStorageKey) ?? sessionStorage.getItem(this.roleStorageKey);
+  }
+
+  isAdmin(): boolean {
+    return this.normalizeRole(this.getRole()) === 'admin';
+  }
+
+  isEmployee(): boolean {
+    return this.normalizeRole(this.getRole()) === 'employee';
+  }
+
+  canManageUsers(): boolean {
+    return this.isAdmin();
+  }
+
+  canManageProducts(): boolean {
+    return this.isAdmin() || this.isEmployee();
+  }
+
+  canManageInventory(): boolean {
+    return this.isAdmin() || this.isEmployee();
+  }
+
+  canEditProducts(): boolean {
+    return this.isAdmin();
+  }
+
+  canEditInventory(): boolean {
+    return this.isAdmin();
+  }
+
+  canDeleteProducts(): boolean {
+    return this.isAdmin();
+  }
+
+  getLandingRoute(role: string | null | undefined = this.getRole()): string {
+    return this.normalizeRole(role) === 'employee' ? '/employee-dashboard' : '/dashboard';
+  }
+
+  getAuthHeaders(): HttpHeaders | undefined {
+    const token = this.getToken();
+
+    if (!token) {
+      return undefined;
+    }
+
+    return new HttpHeaders({ Authorization: `Bearer ${token}` });
   }
 
   private storeSession(session: AuthSession, rememberMe: boolean): void {
@@ -111,8 +180,15 @@ export class AuthService {
   }
 
   private extractUser(candidate: Record<string, unknown> | null): AuthSession['user'] {
+    if (!candidate) {
+      return undefined;
+    }
+
     const data = this.extractObject(candidate?.['data']);
-    const user = this.extractObject(candidate?.['user']) ?? this.extractObject(data?.['user']);
+    const user =
+      this.extractObject(candidate?.['user']) ??
+      this.extractObject(data?.['user']) ??
+      candidate;
 
     if (!user) {
       return undefined;
@@ -124,6 +200,22 @@ export class AuthService {
       email: this.extractString(user, ['email']) ?? undefined,
       role: this.extractString(user, ['role', 'profile']) ?? undefined,
     };
+  }
+
+  private normalizeRegisterResponse(response: unknown): RegisterResponse {
+    const candidate = this.extractObject(response);
+
+    return {
+      id: this.extractString(candidate, ['id']) ?? undefined,
+      username: this.extractString(candidate, ['username', 'name']) ?? undefined,
+      email: this.extractString(candidate, ['email']) ?? undefined,
+      role: this.extractString(candidate, ['role']) ?? undefined,
+      raw: response,
+    };
+  }
+
+  private normalizeRole(role: string | null): string | null {
+    return role?.trim().toLowerCase() ?? null;
   }
 
   private extractObject(value: unknown): Record<string, unknown> | null {
